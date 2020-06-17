@@ -17,6 +17,8 @@ var options = { enableHighAccuracy: true, timeout: 90000, maximumAge: 0};
 var markers = [];
 var infoWindow = null;
 var t1=0,t2=0;
+var service = null;
+var currentCoords = {};
 
 function displayLatLong(position) {
     var timeTag = document.getElementById("time");
@@ -25,6 +27,10 @@ function displayLatLong(position) {
 
 	var lat = position.coords.latitude;
 	var long = position.coords.longitude;
+
+    currentCoords.lat = lat;
+    currentCoords.lng = long;
+
 	var pTag = document.getElementById("location");
 	pTag.innerHTML = "Latitude: " + lat + ", Longitude: " + long + "<br>";
 
@@ -86,10 +92,14 @@ function showMap(coords) {
 	var mapDiv = document.getElementById("map");
 	map = new google.maps.Map(mapDiv, mapOptions);
 	infoWindow = new google.maps.InfoWindow();
+	service = new google.maps.places.PlacesService(map);
 
 	google.maps.event.addListener(map, "click", function(event) {
       var selectedLat = event.latLng.lat();
       var selectedLng = event.latLng.lng();
+
+      currentCoords.lat = selectedLat;
+      currentCoords.lng = selectedLng;
 
 	  var pTag = document.getElementById("location");
 	  pTag.innerHTML = "Latitude: " + selectedLat + ", Longitude: " + selectedLng + "<br>";
@@ -100,6 +110,57 @@ function showMap(coords) {
 	});
 
 	showSearchForm();
+}
+
+function clearMarkers() {
+	markers.forEach(function(marker){});
+}
+
+
+
+function makePlacesRequest(lat, lng) {
+	var query = document.getElementById("query").value;
+	if(query) {
+		var placesRequest = {
+			location: new google.maps.LatLng(lat, lng),
+			radius: 1000,
+			keyword: query
+		};
+		service.nearbySearch(placesRequest, function(results, status) {
+			if(status == google.maps.places.PlacesServiceStatus.OK) {
+				results.forEach(function(place){
+					//console.log(place);
+					markAPlace(place);
+				});
+			}
+		});
+
+	} else {
+		alert("No Query entered for places search");
+	}
+
+}
+
+function markAPlace(place) {
+   var markerOptions = {
+   	   position: place.geometry.location,
+   	   map: map,
+   	   clickable: true
+   };
+
+   var marker = new google.maps.Marker(markerOptions);
+   markers.push(marker);
+
+   google.maps.event.addListener(marker, "click", function(place, marker){
+       return function() {
+            if(place.vicinity) {
+            	infoWindow.setContent(place.name + "<br>" + place.vicinity);
+            } else {
+            	infoWindow.setContent(place.name);
+            }
+            infoWindow.open(map, marker);
+       };
+   }(place, marker));
 }
 
 function createMarker(latLng) {
@@ -125,7 +186,7 @@ function showSearchForm() {
 	var searchButtonTag = document.getElementById("search");
 	searchButtonTag.onclick = function(event) {
         event.preventDefault();
-
+        makePlacesRequest(currentCoords.lat, currentCoords.lng);
 	};
 }
 

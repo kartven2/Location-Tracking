@@ -13,3 +13,9 @@ Geolocation API: Using Google Maps
 5. Display Road Map, Allow users to pan, Set marker
 
 6. Search for places based on keywords using the google maps API
+
+
+How to run
+
+1. Add your Google Maps API key in index.html
+2. Run "http-server"
