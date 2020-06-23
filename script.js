@@ -179,6 +179,11 @@ function createMarker(latLng) {
 	});
 }
 
+function clearMarkers() {
+	markers.forEach(function(marker){marker.setMap(null);});
+	markers = [];
+}
+
 function showSearchForm() {
 	var searchFormTag = document.getElementById("searchForm");
 	searchFormTag.style.visibility = "visible";
@@ -186,6 +191,7 @@ function showSearchForm() {
 	var searchButtonTag = document.getElementById("search");
 	searchButtonTag.onclick = function(event) {
         event.preventDefault();
+        clearMarkers();
         makePlacesRequest(currentCoords.lat, currentCoords.lng);
 	};
 }
